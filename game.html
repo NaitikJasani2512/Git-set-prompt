@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Jet Fighter: Tactical War Field</title>
+    <title>Realistic Jet Fighter: Air Battle</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
-            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', 'Impact', sans-serif;
         }
 
         body, html {
@@ -28,7 +28,7 @@
             left: 0;
         }
 
-        /* Tactical HUD Overlay */
+        /* Tactical Battlefield HUD */
         #hud-container {
             position: absolute;
             top: 0;
@@ -39,7 +39,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px;
+            padding: 25px;
             z-index: 5;
         }
 
@@ -47,12 +47,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(12, 18, 28, 0.75);
+            background: rgba(10, 15, 25, 0.85);
             padding: 15px 30px;
             border-radius: 12px;
-            border: 1px solid rgba(0, 255, 204, 0.4);
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
-            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
+            backdrop-filter: blur(10px);
         }
 
         .hud-item {
@@ -61,27 +61,31 @@
             align-items: center;
         }
 
-        .hud-title {
+        .hud-label {
             font-size: 11px;
             color: #00e5ff;
             letter-spacing: 2px;
             font-weight: 800;
         }
 
-        .hud-value {
-            font-size: 24px;
+        .hud-val {
+            font-size: 26px;
             font-weight: 900;
             color: #ffffff;
             text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
         }
 
-        /* Health Bar */
-        .health-box {
-            width: 200px;
-            height: 14px;
-            background: rgba(255, 0, 0, 0.2);
-            border: 1px solid #ff3366;
-            border-radius: 7px;
+        /* Health Indicator */
+        .health-wrapper {
+            width: 220px;
+        }
+
+        .health-bar-container {
+            width: 100%;
+            height: 16px;
+            background: rgba(255, 0, 85, 0.2);
+            border: 1px solid #ff0055;
+            border-radius: 8px;
             overflow: hidden;
             margin-top: 4px;
         }
@@ -93,15 +97,15 @@
             transition: width 0.15s ease-out;
         }
 
-        /* Reticle Target Sight */
+        /* Targeting Reticle Crosshair */
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             transform: translate(-50%, -50%);
-            border: 2px solid rgba(0, 255, 204, 0.7);
+            border: 2px solid rgba(0, 255, 204, 0.8);
             border-radius: 50%;
             pointer-events: none;
         }
@@ -112,17 +116,17 @@
             background: rgba(0, 255, 204, 0.9);
         }
 
-        #crosshair::before { top: 20px; left: -12px; width: 68px; height: 2px; }
-        #crosshair::after { top: -12px; left: 20px; width: 2px; height: 68px; }
+        #crosshair::before { top: 21px; left: -14px; width: 72px; height: 2px; }
+        #crosshair::after { top: -14px; left: 21px; width: 2px; height: 72px; }
 
-        /* Dialog Screens */
+        /* Screens */
         .modal-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(5, 8, 15, 0.88);
+            background: rgba(5, 8, 15, 0.92);
             backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
@@ -131,9 +135,7 @@
             z-index: 20;
         }
 
-        .modal-screen.hidden {
-            display: none;
-        }
+        .modal-screen.hidden { display: none; }
 
         .title-text {
             font-size: 52px;
@@ -152,9 +154,9 @@
             margin-bottom: 25px;
         }
 
-        .control-guide {
-            background: rgba(255, 255, 255, 0.04);
-            padding: 20px 35px;
+        .controls-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 22px 35px;
             border-radius: 10px;
             border: 1px solid rgba(0, 229, 255, 0.3);
             margin-bottom: 30px;
@@ -163,18 +165,15 @@
             line-height: 2;
         }
 
-        .control-guide span {
-            color: #00ffcc;
-            font-weight: bold;
-        }
+        .controls-card span { color: #00ffcc; font-weight: bold; }
 
-        .action-btn {
+        .btn-action {
             background: linear-gradient(135deg, #00e5ff, #0055ff);
             border: none;
             color: #000;
-            font-size: 18px;
+            font-size: 19px;
             font-weight: 900;
-            padding: 16px 50px;
+            padding: 16px 55px;
             border-radius: 30px;
             cursor: pointer;
             letter-spacing: 2px;
@@ -182,12 +181,12 @@
             transition: all 0.2s ease;
         }
 
-        .action-btn:hover {
+        .btn-action:hover {
             transform: scale(1.06);
             box-shadow: 0 0 45px rgba(0, 229, 255, 0.9);
         }
     </style>
-    <!-- Three.js Library -->
+    <!-- Three.js Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
@@ -197,20 +196,20 @@
     <div id="hud-container">
         <div class="hud-panel">
             <div class="hud-item">
-                <span class="hud-title">SCORE</span>
-                <span id="score-txt" class="hud-value">0</span>
+                <span class="hud-label">KILLS</span>
+                <span id="score-txt" class="hud-val">0</span>
             </div>
             <div class="hud-item">
-                <span class="hud-title">SPEED</span>
-                <span id="speed-txt" class="hud-value">220 KTS</span>
+                <span class="hud-label">AIR SPEED</span>
+                <span id="speed-txt" class="hud-val">320 KTS</span>
             </div>
             <div class="hud-item">
-                <span class="hud-title">ALTITUDE</span>
-                <span id="alt-txt" class="hud-value">850 FT</span>
+                <span class="hud-label">ALTITUDE</span>
+                <span id="alt-txt" class="hud-val">850 FT</span>
             </div>
-            <div class="hud-item">
-                <span class="hud-title">ARMOR HEALTH</span>
-                <div class="health-box">
+            <div class="hud-item health-wrapper">
+                <span class="hud-label">SHIELD ARMOR</span>
+                <div class="health-bar-container">
                     <div id="health-bar"></div>
                 </div>
             </div>
@@ -221,104 +220,101 @@
 
     <!-- Start Overlay -->
     <div id="start-modal" class="modal-screen">
-        <h1 class="title-text">WAR FIELD 3D</h1>
-        <p class="sub-text">PREMIUM JET FIGHTER BATTLEFIELD SIMULATOR</p>
+        <h1 class="title-text">AIR WARRIOR 3D</h1>
+        <p class="sub-text">PREMIUM JET FIGHTER SIMULATOR</p>
 
-        <div class="control-guide">
-            • Pitch Up / Down (Nose): <span>S / W</span> or <span>Down / Up Arrow</span><br>
-            • Roll Bank (Left / Right): <span>A / D</span> or <span>Left / Right Arrow</span><br>
-            • Yaw Rudder (Heading): <span>Q / E</span><br>
-            • Fire Machine Gun: <span>SPACEBAR</span><br>
-            • Thrust Speed Adjust: <span>SHIFT (Boost) / CTRL (Brake)</span>
+        <div class="controls-card">
+            • <span>D / Right Arrow</span> : Turn RIGHT (Right ki taraf)<br>
+            • <span>A / Left Arrow</span> : Turn LEFT (Left ki taraf)<br>
+            • <span>S / Down Arrow</span> : Pitch UP (Aasmaan ki taraf)<br>
+            • <span>W / Up Arrow</span> : Pitch DOWN (Zameen ki taraf)<br>
+            • <span>SPACEBAR</span> : Machine Cannon Fire<br>
+            • <span>SHIFT / CTRL</span> : Thruster Boost / Air Brake
         </div>
 
-        <button id="start-btn" class="action-btn">LAUNCH MISSION</button>
+        <button id="start-btn" class="btn-action">LAUNCH MISSION</button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="over-modal" class="modal-screen hidden">
         <h1 class="title-text" style="color: #ff0055; text-shadow: 0 0 30px #ff0055;">MISSION FAILED</h1>
         <p class="sub-text" style="color: #ff99aa;">YOUR JET WAS DESTROYED IN COMBAT</p>
-        <p class="sub-text" style="font-size: 20px; color: #fff;">TANKS DESTROYED: <span id="destroyed-txt" style="color:#00ffcc">0</span></p>
+        <p class="sub-text" style="font-size: 20px; color: #fff;">ENEMY JETS SHOT DOWN: <span id="kills-txt" style="color:#00ffcc">0</span></p>
         <br>
-        <button id="restart-btn" class="action-btn">REDEPLOY JET</button>
+        <button id="restart-btn" class="btn-action">REDEPLOY JET</button>
     </div>
 
     <script>
-        // Audio Effects Generator
-        class SoundEngine {
+        // Sound Engine Synthesizer
+        class SoundFX {
             constructor() { this.ctx = null; }
             init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-            gunSound() {
+            gun() {
                 if(!this.ctx) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(380, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.08);
+                osc.frequency.setValueAtTime(420, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.08);
                 gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
                 osc.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(); osc.stop(this.ctx.currentTime + 0.08);
             }
-            expSound(big = false) {
+            boom() {
                 if(!this.ctx) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                const dur = big ? 0.6 : 0.3;
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(big ? 90 : 160, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + dur);
-                gain.gain.setValueAtTime(big ? 0.5 : 0.25, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+                osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + dur);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.5);
             }
         }
-        const sfx = new SoundEngine();
+        const sfx = new SoundFX();
 
-        // Game Variables
+        // Game State Variables
         let scene, camera, renderer;
-        let jetGroup, tanks = [], bullets = [], tankProjectiles = [], particles = [];
+        let playerJet, enemyJets = [], playerBullets = [], enemyBullets = [], particles = [], clouds = [];
         let isGameRunning = false;
-        let lastTimestamp = performance.now();
+        let lastTime = performance.now();
         let score = 0, health = 100, maxHealth = 100;
 
-        // Controls & Dynamics
-        let forwardSpeed = 130;
-        const minSpeed = 80, maxSpeed = 260;
-        let pitchVelocity = 0, rollVelocity = 0, yawVelocity = 0;
-        let fireCooldown = 0;
+        let flightSpeed = 170;
+        const minSpeed = 90, maxSpeed = 310;
+        let pitchVel = 0, rollVel = 0;
+        let shootTimer = 0;
 
-        const keys = { w: false, s: false, a: false, d: false, q: false, e: false, space: false, shift: false, ctrl: false };
+        const keys = { w: false, s: false, a: false, d: false, space: false, shift: false, ctrl: false };
 
-        window.addEventListener('keydown', (e) => handleKey(e, true));
-        window.addEventListener('keyup', (e) => handleKey(e, false));
+        window.addEventListener('keydown', (e) => setKey(e, true));
+        window.addEventListener('keyup', (e) => setKey(e, false));
 
-        function handleKey(e, isPressed) {
+        function setKey(e, pressed) {
             const k = e.key.toLowerCase();
-            if (k === 'w' || k === 'arrowup') keys.w = isPressed;
-            if (k === 's' || k === 'arrowdown') keys.s = isPressed;
-            if (k === 'a' || k === 'arrowleft') keys.a = isPressed;
-            if (k === 'd' || k === 'arrowright') keys.d = isPressed;
-            if (k === 'q') keys.q = isPressed;
-            if (k === 'e') keys.e = isPressed;
-            if (k === ' ') keys.space = isPressed;
-            if (k === 'shift') keys.shift = isPressed;
-            if (k === 'control') keys.ctrl = isPressed;
+            if (k === 'w' || k === 'arrowup') keys.w = pressed;
+            if (k === 's' || k === 'arrowdown') keys.s = pressed;
+            if (k === 'a' || k === 'arrowleft') keys.a = pressed;
+            if (k === 'd' || k === 'arrowright') keys.d = pressed;
+            if (k === ' ') keys.space = pressed;
+            if (k === 'shift') keys.shift = pressed;
+            if (k === 'control') keys.ctrl = pressed;
         }
 
-        // --- 3D Scene Initialization ---
+        // --- Initialize Engine ---
         function initScene() {
             const container = document.getElementById('game-container');
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x8cb3d9); // Atmospheric Sky
-            scene.fog = new THREE.FogExp2(0x8cb3d9, 0.00025);
+            scene.background = new THREE.Color(0x91b2d6); // Sky Blue Horizon
+            scene.fog = new THREE.FogExp2(0x91b2d6, 0.0002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
@@ -326,95 +322,123 @@
             container.appendChild(renderer.domElement);
 
             // Lighting
-            const ambLight = new THREE.AmbientLight(0xffffff, 0.5);
+            const ambLight = new THREE.AmbientLight(0xffffff, 0.55);
             scene.add(ambLight);
 
-            const sun = new THREE.DirectionalLight(0xfff5e6, 1.3);
+            const sun = new THREE.DirectionalLight(0xfff5e6, 1.4);
             sun.position.set(1200, 2500, 1000);
             sun.castShadow = true;
             sun.shadow.mapSize.width = 2048;
             sun.shadow.mapSize.height = 2048;
-            sun.shadow.camera.near = 100;
-            sun.shadow.camera.far = 6000;
-            const size = 1800;
-            sun.shadow.camera.left = -size;
-            sun.shadow.camera.right = size;
-            sun.shadow.camera.top = size;
-            sun.shadow.camera.bottom = -size;
             scene.add(sun);
 
-            createDesertWarfield();
-            create3DFighterJet();
+            createBattlefieldTerrain();
+            create3DClouds();
+
+            // Player Jet Creation (Ultra High Quality Model)
+            playerJet = buildRealisticJet(0x1c2430, true);
+            playerJet.position.set(0, 450, 0);
+            scene.add(playerJet);
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        // --- War Field Desert Ground ---
-        function createDesertWarfield() {
-            const terrainSize = 12000;
-            const geo = new THREE.PlaneGeometry(terrainSize, terrainSize, 140, 140);
+        // Realistic Desert Terrain Ground
+        function createBattlefieldTerrain() {
+            const size = 14000;
+            const geo = new THREE.PlaneGeometry(size, size, 140, 140);
             geo.rotateX(-Math.PI / 2);
 
             const pos = geo.attributes.position;
             for (let i = 0; i < pos.count; i++) {
                 const x = pos.getX(i);
                 const z = pos.getZ(i);
-                // Dynamic Dunes Terrain Elevation
-                const height = Math.sin(x * 0.001) * Math.cos(z * 0.001) * 180 + Math.sin(x * 0.004) * 50;
+                const height = Math.sin(x * 0.001) * Math.cos(z * 0.001) * 180 + Math.sin(x * 0.003) * 45;
                 pos.setY(i, height - 120);
             }
             geo.computeVertexNormals();
 
-            // Tactical Sandy Military Field Material
-            const mat = new THREE.MeshStandardMaterial({
-                color: 0x8a704c,
-                roughness: 0.95,
-                metalness: 0.05,
-                flatShading: true
-            });
-
+            const mat = new THREE.MeshStandardMaterial({ color: 0x8c7355, roughness: 0.95, flatShading: true });
             const terrain = new THREE.Mesh(geo, mat);
             terrain.receiveShadow = true;
             scene.add(terrain);
 
-            // Grid Overlay for Military Visual Look
-            const grid = new THREE.GridHelper(terrainSize, 120, 0x00e5ff, 0x4a3c28);
-            grid.position.y = -110;
-            scene.add(grid);
+            // Trees and Rocks placement on Ground
+            const treeGeo = new THREE.ConeGeometry(5, 20, 6);
+            const treeMat = new THREE.MeshStandardMaterial({ color: 0x2e4221, roughness: 0.8 });
+
+            for (let i = 0; i < 400; i++) {
+                const tree = new THREE.Mesh(treeGeo, treeMat);
+                const rx = (Math.random() - 0.5) * 9000;
+                const rz = (Math.random() - 0.5) * 9000;
+                tree.position.set(rx, -30, rz);
+                tree.castShadow = true;
+                scene.add(tree);
+            }
         }
 
-        // --- Realistic Fighter Jet ---
-        function create3DFighterJet() {
-            jetGroup = new THREE.Group();
+        // Volumetric 3D Clouds in Sky
+        function create3DClouds() {
+            const cloudGeo = new THREE.SphereGeometry(1, 8, 8);
+            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 });
 
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1f2833, metalness: 0.85, roughness: 0.2 });
-            const wingMat = new THREE.MeshStandardMaterial({ color: 0x11161d, metalness: 0.9, roughness: 0.3 });
-            const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x00e5ff, metalness: 0.1, roughness: 0.1, transmission: 0.8, transparent: true, opacity: 0.7 });
+            for (let i = 0; i < 70; i++) {
+                const cloudGroup = new THREE.Group();
+                const numPuffs = 5 + Math.floor(Math.random() * 6);
 
-            // Main Stealth Nose & Fuselage
-            const noseGeo = new THREE.ConeGeometry(2, 16, 8);
+                for (let j = 0; j < numPuffs; j++) {
+                    const puff = new THREE.Mesh(cloudGeo, cloudMat);
+                    puff.position.set(
+                        (Math.random() - 0.5) * 120,
+                        (Math.random() - 0.5) * 30,
+                        (Math.random() - 0.5) * 120
+                    );
+                    const scale = 40 + Math.random() * 80;
+                    puff.scale.set(scale, scale * 0.5, scale);
+                    cloudGroup.add(puff);
+                }
+
+                cloudGroup.position.set(
+                    (Math.random() - 0.5) * 8000,
+                    600 + Math.random() * 600,
+                    (Math.random() - 0.5) * 8000
+                );
+                scene.add(cloudGroup);
+                clouds.push(cloudGroup);
+            }
+        }
+
+        // High Quality 3D Fighter Jet Model Generator
+        function buildRealisticJet(colorHex, isPlayer = false) {
+            const jetGroup = new THREE.Group();
+
+            const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.9, roughness: 0.2 });
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0x12171f, metalness: 0.85, roughness: 0.25 });
+            const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x00e5ff, metalness: 0.1, roughness: 0.1, transmission: 0.85, transparent: true, opacity: 0.8 });
+
+            // Sharp Stealth Fuselage
+            const noseGeo = new THREE.ConeGeometry(2, 18, 8);
             noseGeo.rotateX(Math.PI / 2);
             const nose = new THREE.Mesh(noseGeo, bodyMat);
             nose.castShadow = true;
             jetGroup.add(nose);
 
-            // Cockpit Canopy
+            // Cockpit Glass
             const cockpitGeo = new THREE.SphereGeometry(1.2, 16, 16);
-            cockpitGeo.scale(0.85, 0.7, 3);
+            cockpitGeo.scale(0.8, 0.65, 3.2);
             const cockpit = new THREE.Mesh(cockpitGeo, glassMat);
-            cockpit.position.set(0, 1, 0.8);
+            cockpit.position.set(0, 1.1, 1);
             jetGroup.add(cockpit);
 
-            // Wings
+            // Detailed Delta Wings
             const wingShape = new THREE.Shape();
             wingShape.moveTo(0, 0);
-            wingShape.lineTo(8, -5);
-            wingShape.lineTo(8, -7.5);
-            wingShape.lineTo(0, -4);
+            wingShape.lineTo(8.5, -6);
+            wingShape.lineTo(8.5, -8.5);
+            wingShape.lineTo(0, -4.5);
             wingShape.closePath();
 
-            const extrudeSettings = { depth: 0.2, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05 };
-            const wingGeo = new THREE.ExtrudeGeometry(wingShape, extrudeSettings);
+            const wingGeo = new THREE.ExtrudeGeometry(wingShape, { depth: 0.2, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05 });
             wingGeo.rotateX(Math.PI / 2);
 
             const rWing = new THREE.Mesh(wingGeo, wingMat);
@@ -428,279 +452,231 @@
             lWing.castShadow = true;
             jetGroup.add(lWing);
 
-            // Double Twin Tail Fins
-            const tailGeo = new THREE.BoxGeometry(0.2, 3.5, 3);
+            // Double V-Tail Fins
+            const tailGeo = new THREE.BoxGeometry(0.2, 4, 3.5);
             const rTail = new THREE.Mesh(tailGeo, bodyMat);
-            rTail.position.set(1.2, 1.8, -6);
-            rTail.rotation.z = -0.25;
+            rTail.position.set(1.4, 2, -7);
+            rTail.rotation.z = -0.3;
             jetGroup.add(rTail);
 
             const lTail = new THREE.Mesh(tailGeo, bodyMat);
-            lTail.position.set(-1.2, 1.8, -6);
-            lTail.rotation.z = 0.25;
+            lTail.position.set(-1.4, 2, -7);
+            lTail.rotation.z = 0.3;
             jetGroup.add(lTail);
 
-            // Thruster Exhaust Flames
-            const engineMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-            const engineGeo = new THREE.CylinderGeometry(0.7, 0.8, 1.8, 12);
+            // Dual Thrusters Flame
+            const engineMat = new THREE.MeshBasicMaterial({ color: isPlayer ? 0x00f0ff : 0xff3300 });
+            const engineGeo = new THREE.CylinderGeometry(0.7, 0.8, 2, 12);
             engineGeo.rotateX(Math.PI / 2);
 
             const lEngine = new THREE.Mesh(engineGeo, engineMat);
-            lEngine.position.set(-0.9, 0, -7.8);
+            lEngine.position.set(-0.9, 0, -8.8);
             jetGroup.add(lEngine);
 
             const rEngine = new THREE.Mesh(engineGeo, engineMat);
-            rEngine.position.set(0.9, 0, -7.8);
+            rEngine.position.set(0.9, 0, -8.8);
             jetGroup.add(rEngine);
 
-            jetGroup.position.set(0, 450, 0);
-            scene.add(jetGroup);
+            return jetGroup;
         }
 
-        // --- Ground Military Tank ---
-        function spawnEnemyTank() {
-            const tankGroup = new THREE.Group();
-
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3d4a26, roughness: 0.75, metalness: 0.3 });
-            const darkMat = new THREE.MeshStandardMaterial({ color: 0x1a2110, roughness: 0.9 });
-
-            // Base Chassis
-            const chassis = new THREE.Mesh(new THREE.BoxGeometry(8, 3.2, 12), bodyMat);
-            chassis.position.y = 1.6;
-            chassis.castShadow = true;
-            tankGroup.add(chassis);
-
-            // Tracks
-            const trackGeo = new THREE.BoxGeometry(1.8, 2.8, 12.5);
-            const lTrack = new THREE.Mesh(trackGeo, darkMat);
-            lTrack.position.set(-4.4, 1.4, 0);
-            tankGroup.add(lTrack);
-
-            const rTrack = new THREE.Mesh(trackGeo, darkMat);
-            rTrack.position.set(4.4, 1.4, 0);
-            tankGroup.add(rTrack);
-
-            // Turret
-            const turretGroup = new THREE.Group();
-            const turretMesh = new THREE.Mesh(new THREE.BoxGeometry(5.2, 2.2, 6), bodyMat);
-            turretMesh.position.y = 3.8;
-            turretMesh.castShadow = true;
-            turretGroup.add(turretMesh);
-
-            // Cannon Barrel
-            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 7.5, 10), darkMat);
-            barrel.rotateX(-Math.PI / 2);
-            barrel.position.set(0, 3.8, 5.5);
-            turretGroup.add(barrel);
-
-            tankGroup.add(turretGroup);
-
-            // Position random placement in war zone
+        // Spawn Enemy Jets (Aasmaan se Hamla karne waale Plane)
+        function spawnEnemyJet() {
+            const enemy = buildRealisticJet(0x7a1212, false); // Red Enemy Fighter
             const angle = Math.random() * Math.PI * 2;
-            const dist = 700 + Math.random() * 2000;
-            tankGroup.position.set(
-                jetGroup.position.x + Math.cos(angle) * dist,
-                0,
-                jetGroup.position.z + Math.sin(angle) * dist
+            const dist = 1400 + Math.random() * 1600;
+
+            enemy.position.set(
+                playerJet.position.x + Math.cos(angle) * dist,
+                350 + Math.random() * 400,
+                playerJet.position.z + Math.sin(angle) * dist
             );
 
-            tankGroup.userData = {
-                turret: turretGroup,
-                hp: 4,
+            enemy.userData = {
+                hp: 3,
                 shootTimer: Math.random() * 2
             };
 
-            scene.add(tankGroup);
-            tanks.push(tankGroup);
+            scene.add(enemy);
+            enemyJets.push(enemy);
         }
 
-        // --- Weapon Systems ---
-        function fireCannons() {
-            sfx.gunSound();
+        // Fire Player Cannons
+        function firePlayer() {
+            sfx.gun();
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+            const geo = new THREE.CylinderGeometry(0.2, 0.2, 5, 6);
+            geo.rotateX(Math.PI / 2);
 
-            const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-            const bulletGeo = new THREE.CylinderGeometry(0.2, 0.2, 5, 6);
-            bulletGeo.rotateX(Math.PI / 2);
+            [-3.8, 3.8].forEach(offset => {
+                const bullet = new THREE.Mesh(geo, mat);
+                bullet.position.copy(playerJet.position);
 
-            [-3.5, 3.5].forEach(offset => {
-                const bullet = new THREE.Mesh(bulletGeo, bulletMat);
-                bullet.position.copy(jetGroup.position);
+                const localOffset = new THREE.Vector3(offset, 0, 2).applyQuaternion(playerJet.quaternion);
+                bullet.position.add(localOffset);
+                bullet.quaternion.copy(playerJet.quaternion);
 
-                const wingPos = new THREE.Vector3(offset, 0, 2).applyQuaternion(jetGroup.quaternion);
-                bullet.position.add(wingPos);
-                bullet.quaternion.copy(jetGroup.quaternion);
-
-                const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(jetGroup.quaternion);
-                bullet.userData = { vel: dir.multiplyScalar(1000), life: 2.2 };
+                const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(playerJet.quaternion);
+                bullet.userData = { vel: dir.multiplyScalar(1100), life: 2.2 };
 
                 scene.add(bullet);
-                bullets.push(bullet);
+                playerBullets.push(bullet);
             });
         }
 
-        function fireTankTurret(tank) {
+        // Enemy Jets Attack Player
+        function fireEnemy(enemy) {
             const mat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
-            const geo = new THREE.SphereGeometry(1.2, 8, 8);
+            const geo = new THREE.SphereGeometry(1, 8, 8);
 
             const proj = new THREE.Mesh(geo, mat);
-            proj.position.copy(tank.position);
-            proj.position.y += 4;
+            proj.position.copy(enemy.position);
 
-            const dir = new THREE.Vector3().subVectors(jetGroup.position, proj.position).normalize();
-            proj.userData = { vel: dir.multiplyScalar(420), life: 4.5 };
+            const dir = new THREE.Vector3().subVectors(playerJet.position, enemy.position).normalize();
+            proj.userData = { vel: dir.multiplyScalar(580), life: 4.0 };
 
             scene.add(proj);
-            tankProjectiles.push(proj);
+            enemyBullets.push(proj);
         }
 
-        // --- Explosion Visual Particles ---
-        function createExplosion(pos, isBig = false) {
-            sfx.expSound(isBig);
-            const count = isBig ? 40 : 18;
-
-            for (let i = 0; i < count; i++) {
-                const mat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.4 ? 0xffaa00 : 0xff2200 });
-                const particle = new THREE.Mesh(new THREE.SphereGeometry(0.6 + Math.random() * 1.8, 6, 6), mat);
-                particle.position.copy(pos);
+        // Explosion Particles
+        function createExplosion(pos) {
+            sfx.boom();
+            for (let i = 0; i < 30; i++) {
+                const mat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.4 ? 0xffaa00 : 0xff0055 });
+                const p = new THREE.Mesh(new THREE.SphereGeometry(0.8 + Math.random() * 1.5, 6, 6), mat);
+                p.position.copy(pos);
 
                 const vel = new THREE.Vector3(
                     (Math.random() - 0.5) * 50,
-                    Math.random() * 35,
+                    (Math.random() - 0.5) * 50,
                     (Math.random() - 0.5) * 50
                 );
-                particle.userData = { vel: vel, life: 0.7 + Math.random() * 0.4 };
+                p.userData = { vel: vel, life: 0.7 + Math.random() * 0.4 };
 
-                scene.add(particle);
-                particles.push(particle);
+                scene.add(p);
+                particles.push(p);
             }
         }
 
-        // --- Flight Mechanics & Movement Fix ---
-        function updateFlightControls(dt) {
-            // Speed controls
-            if (keys.shift) forwardSpeed = Math.min(forwardSpeed + 110 * dt, maxSpeed);
-            else if (keys.ctrl) forwardSpeed = Math.max(forwardSpeed - 90 * dt, minSpeed);
+        // Flight Physics & Fixed Controls Mechanics
+        function updateFlight(dt) {
+            if (keys.shift) flightSpeed = Math.min(flightSpeed + 120 * dt, maxSpeed);
+            else if (keys.ctrl) flightSpeed = Math.max(flightSpeed - 90 * dt, minSpeed);
 
-            // Fixed Smooth Control Rotations
             const pitchRate = 1.4;
-            const rollRate = 2.0;
-            const yawRate = 0.9;
+            const rollRate = 2.2;
 
-            // Pitch (Nose Up/Down) - S (Up), W (Down)
-            if (keys.s) pitchVelocity = THREE.MathUtils.lerp(pitchVelocity, pitchRate, dt * 4);
-            else if (keys.w) pitchVelocity = THREE.MathUtils.lerp(pitchVelocity, -pitchRate, dt * 4);
-            else pitchVelocity = THREE.MathUtils.lerp(pitchVelocity, 0, dt * 4);
+            // CORRECT CONTROLS:
+            // D / Right Arrow -> Turn/Bank RIGHT
+            // A / Left Arrow -> Turn/Bank LEFT
+            if (keys.d) rollVel = THREE.MathUtils.lerp(rollVel, -rollRate, dt * 5);
+            else if (keys.a) rollVel = THREE.MathUtils.lerp(rollVel, rollRate, dt * 5);
+            else rollVel = THREE.MathUtils.lerp(rollVel, 0, dt * 5);
 
-            // Roll (Bank Angle) - A (Left), D (Right)
-            if (keys.a) rollVelocity = THREE.MathUtils.lerp(rollVelocity, rollRate, dt * 4);
-            else if (keys.d) rollVelocity = THREE.MathUtils.lerp(rollVelocity, -rollRate, dt * 4);
-            else rollVelocity = THREE.MathUtils.lerp(rollVelocity, 0, dt * 4);
+            // S / Down Arrow -> Pitch Up
+            // W / Up Arrow -> Pitch Down
+            if (keys.s) pitchVel = THREE.MathUtils.lerp(pitchVel, pitchRate, dt * 5);
+            else if (keys.w) pitchVel = THREE.MathUtils.lerp(pitchVel, -pitchRate, dt * 5);
+            else pitchVel = THREE.MathUtils.lerp(pitchVel, 0, dt * 5);
 
-            // Yaw (Rudder Heading) - Q (Left), E (Right)
-            if (keys.q) yawVelocity = yawRate;
-            else if (keys.e) yawVelocity = -yawRate;
-            else yawVelocity = 0;
+            playerJet.rotateX(pitchVel * dt);
+            playerJet.rotateZ(rollVel * dt);
 
-            // Apply Rotations Proper Order
-            jetGroup.rotateX(pitchVelocity * dt);
-            jetGroup.rotateZ(rollVelocity * dt);
-            jetGroup.rotateY(yawVelocity * dt);
+            // Forward Flight Movement
+            playerJet.translateZ(flightSpeed * dt);
 
-            // Move Jet Forward
-            jetGroup.translateZ(forwardSpeed * dt);
-
-            // Height Limits
-            if (jetGroup.position.y < 18) {
-                jetGroup.position.y = 18;
-                health -= 25 * dt; // Ground crash damage
+            // Ground Lock Limit
+            if (playerJet.position.y < 22) {
+                playerJet.position.y = 22;
+                health -= 30 * dt;
                 if (health <= 0) triggerGameOver();
             }
 
             // Shoot Trigger
-            fireCooldown -= dt;
-            if (keys.space && fireCooldown <= 0) {
-                fireCannons();
-                fireCooldown = 0.09;
+            shootTimer -= dt;
+            if (keys.space && shootTimer <= 0) {
+                firePlayer();
+                shootTimer = 0.09;
             }
 
-            // Camera Tracking Chase
-            const camOffset = new THREE.Vector3(0, 9, -28).applyMatrix4(jetGroup.matrixWorld);
+            // Camera Tracking
+            const camOffset = new THREE.Vector3(0, 9, -28).applyMatrix4(playerJet.matrixWorld);
             camera.position.lerp(camOffset, 0.25);
-            camera.lookAt(jetGroup.position.clone().add(new THREE.Vector3(0, 0, 60).applyQuaternion(jetGroup.quaternion)));
+            camera.lookAt(playerJet.position.clone().add(new THREE.Vector3(0, 0, 50).applyQuaternion(playerJet.quaternion)));
 
-            // Update HUD Stats
-            document.getElementById('speed-txt').textContent = `${Math.round(forwardSpeed * 1.8)} KTS`;
-            document.getElementById('alt-txt').textContent = `${Math.round(jetGroup.position.y * 3.2)} FT`;
+            // HUD Stats
+            document.getElementById('speed-txt').textContent = `${Math.round(flightSpeed * 1.8)} KTS`;
+            document.getElementById('alt-txt').textContent = `${Math.round(playerJet.position.y * 3.2)} FT`;
             document.getElementById('health-bar').style.width = `${Math.max(0, (health / maxHealth) * 100)}%`;
         }
 
-        // --- Combat & Enemy Mechanics ---
+        // World AI & Physics Update
         function updateWorld(dt) {
-            if (tanks.length < 14) spawnEnemyTank();
+            if (enemyJets.length < 8) spawnEnemyJet();
 
-            // Tanks behavior
-            tanks.forEach((tank) => {
-                const turret = tank.userData.turret;
-                turret.lookAt(jetGroup.position.x, turret.position.y + tank.position.y, jetGroup.position.z);
+            // Enemy Attack Logic
+            enemyJets.forEach((enemy) => {
+                enemy.lookAt(playerJet.position);
+                enemy.translateZ(110 * dt);
 
-                tank.userData.shootTimer -= dt;
-                const dist = tank.position.distanceTo(jetGroup.position);
-                if (dist < 1800 && tank.userData.shootTimer <= 0) {
-                    fireTankTurret(tank);
-                    tank.userData.shootTimer = 2.2 + Math.random() * 2;
+                enemy.userData.shootTimer -= dt;
+                if (enemy.userData.shootTimer <= 0 && enemy.position.distanceTo(playerJet.position) < 1700) {
+                    fireEnemy(enemy);
+                    enemy.userData.shootTimer = 1.8 + Math.random() * 2;
                 }
             });
 
             // Player Bullets
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const b = bullets[i];
+            for (let i = playerBullets.length - 1; i >= 0; i--) {
+                const b = playerBullets[i];
                 b.position.addScaledVector(b.userData.vel, dt);
                 b.userData.life -= dt;
 
-                let destroyed = false;
-                for (let t = tanks.length - 1; t >= 0; t--) {
-                    const tank = tanks[t];
-                    if (b.position.distanceTo(tank.position) < 7) {
-                        createExplosion(b.position, false);
-                        tank.userData.hp--;
+                let hit = false;
+                for (let e = enemyJets.length - 1; e >= 0; e--) {
+                    const enemy = enemyJets[e];
+                    if (b.position.distanceTo(enemy.position) < 14) {
+                        createExplosion(b.position);
+                        enemy.userData.hp--;
 
-                        if (tank.userData.hp <= 0) {
-                            createExplosion(tank.position, true);
-                            scene.remove(tank);
-                            tanks.splice(t, 1);
-                            score += 100;
+                        if (enemy.userData.hp <= 0) {
+                            createExplosion(enemy.position);
+                            scene.remove(enemy);
+                            enemyJets.splice(e, 1);
+                            score++;
                             document.getElementById('score-txt').textContent = score;
                         }
-                        destroyed = true;
+                        hit = true;
                         break;
                     }
                 }
 
-                if (destroyed || b.userData.life <= 0) {
+                if (hit || b.userData.life <= 0) {
                     scene.remove(b);
-                    bullets.splice(i, 1);
+                    playerBullets.splice(i, 1);
                 }
             }
 
-            // Tank Projectiles VS Jet
-            for (let i = tankProjectiles.length - 1; i >= 0; i--) {
-                const p = tankProjectiles[i];
-                p.position.addScaledVector(p.userData.vel, dt);
-                p.userData.life -= dt;
+            // Enemy Projectiles
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                const b = enemyBullets[i];
+                b.position.addScaledVector(b.userData.vel, dt);
+                b.userData.life -= dt;
 
-                if (p.position.distanceTo(jetGroup.position) < 6) {
-                    createExplosion(jetGroup.position, false);
-                    health -= 15;
-                    scene.remove(p);
-                    tankProjectiles.splice(i, 1);
+                if (b.position.distanceTo(playerJet.position) < 8) {
+                    createExplosion(playerJet.position);
+                    health -= 12;
+                    scene.remove(b);
+                    enemyBullets.splice(i, 1);
 
                     if (health <= 0) triggerGameOver();
                     continue;
                 }
 
-                if (p.userData.life <= 0) {
-                    scene.remove(p);
-                    tankProjectiles.splice(i, 1);
+                if (b.userData.life <= 0) {
+                    scene.remove(b);
+                    enemyBullets.splice(i, 1);
                 }
             }
 
@@ -718,16 +694,16 @@
             }
         }
 
-        // --- Core Loop ---
+        // Loop
         function renderLoop() {
             requestAnimationFrame(renderLoop);
 
             const now = performance.now();
-            const dt = Math.min((now - lastTimestamp) / 1000, 0.1);
-            lastTimestamp = now;
+            const dt = Math.min((now - lastTime) / 1000, 0.1);
+            lastTime = now;
 
             if (isGameRunning) {
-                updateFlightControls(dt);
+                updateFlight(dt);
                 updateWorld(dt);
             }
 
@@ -740,21 +716,20 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- Game Flow Control (Start / Stop) ---
-        function launchGame() {
+        // Game State Handlers
+        function launchMission() {
             sfx.init();
             score = 0;
             health = maxHealth;
             document.getElementById('score-txt').textContent = '0';
 
-            jetGroup.position.set(0, 450, 0);
-            jetGroup.quaternion.set(0, 0, 0, 1);
+            playerJet.position.set(0, 450, 0);
+            playerJet.quaternion.set(0, 0, 0, 1);
 
-            // Clear Scene Entities
-            tanks.forEach(t => scene.remove(t));
-            bullets.forEach(b => scene.remove(b));
-            tankProjectiles.forEach(p => scene.remove(p));
-            tanks = []; bullets = []; tankProjectiles = [];
+            enemyJets.forEach(e => scene.remove(e));
+            playerBullets.forEach(b => scene.remove(b));
+            enemyBullets.forEach(b => scene.remove(b));
+            enemyJets = []; playerBullets = []; enemyBullets = [];
 
             document.getElementById('start-modal').classList.add('hidden');
             document.getElementById('over-modal').classList.add('hidden');
@@ -763,16 +738,16 @@
         }
 
         function triggerGameOver() {
-            isGameRunning = false; // Game Stop Logic
-            sfx.expSound(true);
-            document.getElementById('destroyed-txt').textContent = score / 100;
+            isGameRunning = false;
+            sfx.boom();
+            document.getElementById('kills-txt').textContent = score;
             document.getElementById('over-modal').classList.remove('hidden');
         }
 
-        document.getElementById('start-btn').addEventListener('click', launchGame);
-        document.getElementById('restart-btn').addEventListener('click', launchGame);
+        document.getElementById('start-btn').addEventListener('click', launchMission);
+        document.getElementById('restart-btn').addEventListener('click', launchMission);
 
-        // Run Application
+        // Run
         initScene();
         renderLoop();
     </script>
