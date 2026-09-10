@@ -1,51 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Highway Enforcer - Turbo Racer</title>
+    <title>3D Jet Fighter: Tactical War Field</title>
     <style>
-        /* Base & Reset */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
-            -webkit-user-select: none;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
         }
 
-        body {
-            background-color: #020205;
-            color: #fff;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        /* Game Container */
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            max-width: 600px;
-            max-height: 900px;
-            background: #111;
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.25), 0 0 100px rgba(255, 0, 85, 0.15);
-            overflow: hidden;
-            border: 2px solid rgba(0, 240, 255, 0.4);
-        }
-
-        canvas {
-            display: block;
+        body, html {
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            background-color: #050811;
         }
 
-        /* UI Overlay Layer */
-        #ui-layer {
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Tactical HUD Overlay */
+        #hud-container {
             position: absolute;
             top: 0;
             left: 0;
@@ -55,1081 +39,742 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 15px;
-            box-sizing: border-box;
+            padding: 20px;
+            z-index: 5;
         }
 
-        .hud-top {
+        .hud-panel {
             display: flex;
             justify-content: space-between;
-            background: rgba(10, 15, 25, 0.85);
-            padding: 10px 15px;
+            align-items: center;
+            background: rgba(12, 18, 28, 0.75);
+            padding: 15px 30px;
             border-radius: 12px;
-            border: 1px solid rgba(0, 240, 255, 0.3);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
             backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
-        .hud-box {
+        .hud-item {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .hud-label {
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            color: #88aaff;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-
-        .hud-val {
-            font-size: 20px;
+        .hud-title {
+            font-size: 11px;
+            color: #00e5ff;
+            letter-spacing: 2px;
             font-weight: 800;
-            color: #00f0ff;
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
         }
 
-        .hud-bottom {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 60px;
+        .hud-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
         }
 
-        .health-container {
-            width: 100%;
-            max-width: 250px;
-        }
-
-        .health-bar-bg {
-            width: 100%;
+        /* Health Bar */
+        .health-box {
+            width: 200px;
             height: 14px;
-            background: rgba(255, 0, 0, 0.15);
-            border: 1px solid rgba(255, 51, 102, 0.6);
-            border-radius: 8px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff3366;
+            border-radius: 7px;
             overflow: hidden;
-            box-shadow: 0 0 12px rgba(255, 0, 85, 0.3);
+            margin-top: 4px;
         }
 
-        #health-bar-fill {
+        #health-bar {
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, #ff0055, #00ffcc);
-            transition: width 0.2s ease-out;
-            box-shadow: 0 0 10px #00ffcc;
+            transition: width 0.15s ease-out;
         }
 
-        .active-powerups {
-            display: flex;
-            gap: 8px;
+        /* Reticle Target Sight */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 44px;
+            height: 44px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(0, 255, 204, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
-        .powerup-badge {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            padding: 5px 10px;
-            border-radius: 6px;
-            background: rgba(0, 255, 200, 0.15);
-            border: 1px solid #00ffcc;
-            color: #00ffcc;
-            box-shadow: 0 0 10px rgba(0, 255, 200, 0.4);
-            animation: pulse 1s infinite alternate;
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 255, 204, 0.9);
         }
 
-        /* Modals & Overlay Screens */
-        .overlay-screen {
+        #crosshair::before { top: 20px; left: -12px; width: 68px; height: 2px; }
+        #crosshair::after { top: -12px; left: 20px; width: 2px; height: 68px; }
+
+        /* Dialog Screens */
+        .modal-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(3, 4, 12, 0.88);
-            backdrop-filter: blur(10px);
+            background: rgba(5, 8, 15, 0.88);
+            backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
-            transition: opacity 0.3s ease;
+            z-index: 20;
         }
 
-        .overlay-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
+        .modal-screen.hidden {
+            display: none;
         }
 
-        .overlay-screen.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .game-title {
-            font-size: 38px;
+        .title-text {
+            font-size: 52px;
             font-weight: 900;
-            text-align: center;
             color: #fff;
-            text-shadow: 0 0 15px #00f0ff, 0 0 30px #00f0ff, 0 0 60px #00f0ff;
-            letter-spacing: 3px;
-            margin-bottom: 8px;
-            line-height: 1.1;
-        }
-
-        .glow-red {
-            text-shadow: 0 0 15px #ff0055, 0 0 30px #ff0055, 0 0 60px #ff0055;
-        }
-
-        .game-subtitle {
-            font-size: 13px;
-            color: #88aaff;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-        }
-
-        .controls-guide {
-            background: rgba(255, 255, 255, 0.04);
-            padding: 14px 24px;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            margin-bottom: 30px;
+            letter-spacing: 5px;
+            text-shadow: 0 0 30px #00e5ff;
+            margin-bottom: 5px;
             text-align: center;
-            font-size: 13px;
-            color: #ccc;
-            line-height: 1.6;
         }
 
-        .controls-guide span {
+        .sub-text {
+            font-size: 15px;
+            color: #00e5ff;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+        }
+
+        .control-guide {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 20px 35px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            margin-bottom: 30px;
+            color: #ccc;
+            font-size: 14px;
+            line-height: 2;
+        }
+
+        .control-guide span {
             color: #00ffcc;
             font-weight: bold;
         }
 
-        .final-stats {
-            font-size: 18px;
-            margin-bottom: 25px;
-            text-align: center;
-            line-height: 1.8;
-            color: #aaa;
-        }
-
-        .final-stats span {
-            color: #00f0ff;
-            font-weight: bold;
-            font-size: 22px;
-        }
-
-        /* Buttons */
-        .arcade-btn {
-            background: linear-gradient(180deg, #00f0ff, #0066ff);
+        .action-btn {
+            background: linear-gradient(135deg, #00e5ff, #0055ff);
             border: none;
             color: #000;
-            font-weight: 800;
-            font-size: 16px;
-            letter-spacing: 1px;
-            padding: 14px 36px;
+            font-size: 18px;
+            font-weight: 900;
+            padding: 16px 50px;
             border-radius: 30px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+            letter-spacing: 2px;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.6);
             transition: all 0.2s ease;
-            margin-top: 8px;
         }
 
-        .arcade-btn:hover {
+        .action-btn:hover {
             transform: scale(1.06);
-            box-shadow: 0 0 30px rgba(0, 240, 255, 0.9);
-        }
-
-        .arcade-btn:active {
-            transform: scale(0.95);
-        }
-
-        .arcade-btn.secondary {
-            background: linear-gradient(180deg, #444, #111);
-            color: #fff;
-            box-shadow: none;
-            border: 1px solid #555;
-        }
-
-        #pause-toggle-btn {
-            position: absolute;
-            top: 65px;
-            right: 15px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(10, 15, 30, 0.7);
-            border: 1px solid rgba(0, 240, 255, 0.4);
-            color: #00f0ff;
-            font-size: 16px;
-            cursor: pointer;
-            z-index: 5;
-            pointer-events: auto;
-            backdrop-filter: blur(4px);
-        }
-
-        /* Mobile Controls */
-        #mobile-controls {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            padding: 0 10px;
-            z-index: 5;
-            pointer-events: auto;
-        }
-
-        .touch-btn {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            background: rgba(0, 240, 255, 0.12);
-            border: 2px solid rgba(0, 240, 255, 0.4);
-            color: #00f0ff;
-            font-size: 22px;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(4px);
-            touch-action: manipulation;
-        }
-
-        .touch-btn.action {
-            width: 75px;
-            height: 75px;
-            background: rgba(255, 0, 85, 0.2);
-            border-color: rgba(255, 0, 85, 0.6);
-            color: #ff0055;
-        }
-
-        .touch-btn:active {
-            background: rgba(0, 240, 255, 0.35);
-            transform: scale(0.92);
-        }
-
-        @media (min-width: 768px) {
-            #mobile-controls { display: none; }
-            .hud-bottom { margin-bottom: 0; }
-        }
-
-        @keyframes pulse {
-            from { opacity: 0.6; }
-            to { opacity: 1; }
+            box-shadow: 0 0 45px rgba(0, 229, 255, 0.9);
         }
     </style>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
 
-        <div id="ui-layer">
-            <div class="hud-top">
-                <div class="hud-box">
-                    <span class="hud-label">SCORE</span>
-                    <span id="score-val" class="hud-val">0</span>
-                </div>
-                <div class="hud-box">
-                    <span class="hud-label">HIGH SCORE</span>
-                    <span id="highscore-val" class="hud-val">0</span>
-                </div>
-                <div class="hud-box">
-                    <span class="hud-label">LEVEL</span>
-                    <span id="level-val" class="hud-val">1</span>
-                </div>
+    <div id="game-container"></div>
+
+    <div id="hud-container">
+        <div class="hud-panel">
+            <div class="hud-item">
+                <span class="hud-title">SCORE</span>
+                <span id="score-txt" class="hud-value">0</span>
             </div>
-
-            <div class="hud-bottom">
-                <div class="health-container">
-                    <span class="hud-label">ARMOR HEALTH</span>
-                    <div class="health-bar-bg">
-                        <div id="health-bar-fill"></div>
-                    </div>
+            <div class="hud-item">
+                <span class="hud-title">SPEED</span>
+                <span id="speed-txt" class="hud-value">220 KTS</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-title">ALTITUDE</span>
+                <span id="alt-txt" class="hud-value">850 FT</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-title">ARMOR HEALTH</span>
+                <div class="health-box">
+                    <div id="health-bar"></div>
                 </div>
-                <div class="active-powerups" id="powerup-icons"></div>
             </div>
         </div>
 
-        <div id="start-screen" class="overlay-screen active">
-            <h1 class="game-title">HIGHWAY<br>ENFORCER</h1>
-            <p class="game-subtitle">CLEAR THE HIGHWAY OF INCOMING TRAFFIC</p>
-            
-            <div class="controls-guide">
-                <p>Change Lanes: <span>A / D</span> or <span>&larr; / &rarr;</span></p>
-                <p>Fire Blaster: <span>Spacebar</span></p>
-            </div>
+        <div id="crosshair"></div>
+    </div>
 
-            <button id="start-btn" class="arcade-btn">START RACE</button>
+    <!-- Start Overlay -->
+    <div id="start-modal" class="modal-screen">
+        <h1 class="title-text">WAR FIELD 3D</h1>
+        <p class="sub-text">PREMIUM JET FIGHTER BATTLEFIELD SIMULATOR</p>
+
+        <div class="control-guide">
+            • Pitch Up / Down (Nose): <span>S / W</span> or <span>Down / Up Arrow</span><br>
+            • Roll Bank (Left / Right): <span>A / D</span> or <span>Left / Right Arrow</span><br>
+            • Yaw Rudder (Heading): <span>Q / E</span><br>
+            • Fire Machine Gun: <span>SPACEBAR</span><br>
+            • Thrust Speed Adjust: <span>SHIFT (Boost) / CTRL (Brake)</span>
         </div>
 
-        <div id="pause-screen" class="overlay-screen hidden">
-            <h2 class="game-title">GAME PAUSED</h2>
-            <button id="resume-btn" class="arcade-btn">RESUME</button>
-            <button id="pause-restart-btn" class="arcade-btn secondary">RESTART</button>
-        </div>
+        <button id="start-btn" class="action-btn">LAUNCH MISSION</button>
+    </div>
 
-        <div id="gameover-screen" class="overlay-screen hidden">
-            <h1 class="game-title glow-red">TOTAL CRASH</h1>
-            <div class="final-stats">
-                <p>FINAL SCORE<br><span id="final-score">0</span></p>
-                <br>
-                <p>LEVEL REACHED<br><span id="final-level">1</span></p>
-            </div>
-            <button id="restart-btn" class="arcade-btn">TRY AGAIN</button>
-        </div>
-
-        <button id="pause-toggle-btn" class="hud-btn hidden">⏸</button>
-
-        <div id="mobile-controls">
-            <button id="btn-left" class="touch-btn">&larr;</button>
-            <button id="btn-shoot" class="touch-btn action">FIRE</button>
-            <button id="btn-right" class="touch-btn">&rarr;</button>
-        </div>
+    <!-- Game Over Screen -->
+    <div id="over-modal" class="modal-screen hidden">
+        <h1 class="title-text" style="color: #ff0055; text-shadow: 0 0 30px #ff0055;">MISSION FAILED</h1>
+        <p class="sub-text" style="color: #ff99aa;">YOUR JET WAS DESTROYED IN COMBAT</p>
+        <p class="sub-text" style="font-size: 20px; color: #fff;">TANKS DESTROYED: <span id="destroyed-txt" style="color:#00ffcc">0</span></p>
+        <br>
+        <button id="restart-btn" class="action-btn">REDEPLOY JET</button>
     </div>
 
     <script>
-        // --- Canvas & Core Setup ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            const container = document.getElementById('game-container');
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // --- Sound Generator (Web Audio API) ---
-        class SoundSystem {
+        // Audio Effects Generator
+        class SoundEngine {
             constructor() { this.ctx = null; }
-            init() {
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            playShoot() {
-                if (!this.ctx) return;
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+            gunSound() {
+                if(!this.ctx) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(380, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
                 osc.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(); osc.stop(this.ctx.currentTime + 0.08);
             }
-            playExplosion(isBig = false) {
-                if (!this.ctx) return;
+            expSound(big = false) {
+                if(!this.ctx) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                const dur = isBig ? 0.45 : 0.25;
+                const dur = big ? 0.6 : 0.3;
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(isBig ? 120 : 180, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(big ? 90 : 160, this.ctx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + dur);
-                gain.gain.setValueAtTime(isBig ? 0.5 : 0.3, this.ctx.currentTime);
+                gain.gain.setValueAtTime(big ? 0.5 : 0.25, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
                 osc.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(); osc.stop(this.ctx.currentTime + dur);
             }
-            playPowerup() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(350, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(950, this.ctx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-            }
-            playGameOver() {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 1.0);
-                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.0);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 1.0);
-            }
         }
-        const sounds = new SoundSystem();
+        const sfx = new SoundEngine();
 
-        // --- Game State & Variables ---
-        const STATE = { START: 'START', PLAYING: 'PLAYING', PAUSED: 'PAUSED', GAMEOVER: 'GAMEOVER' };
-        let currentState = STATE.START;
-        let score = 0;
-        let highScore = localStorage.getItem('he_highscore') || 0;
-        let level = 1;
-        let lastTime = 0;
-        let spawnTimer = 0;
-        let screenShake = 0;
-        let roadOffset = 0;
+        // Game Variables
+        let scene, camera, renderer;
+        let jetGroup, tanks = [], bullets = [], tankProjectiles = [], particles = [];
+        let isGameRunning = false;
+        let lastTimestamp = performance.now();
+        let score = 0, health = 100, maxHealth = 100;
 
-        document.getElementById('highscore-val').textContent = highScore;
+        // Controls & Dynamics
+        let forwardSpeed = 130;
+        const minSpeed = 80, maxSpeed = 260;
+        let pitchVelocity = 0, rollVelocity = 0, yawVelocity = 0;
+        let fireCooldown = 0;
 
-        function triggerShake(amount) { screenShake = Math.max(screenShake, amount); }
+        const keys = { w: false, s: false, a: false, d: false, q: false, e: false, space: false, shift: false, ctrl: false };
 
-        // --- Input Engine ---
-        const keys = { left: false, right: false, shoot: false };
+        window.addEventListener('keydown', (e) => handleKey(e, true));
+        window.addEventListener('keyup', (e) => handleKey(e, false));
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = true;
-            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = true;
-            if (e.key === ' ' || e.key === 'Spacebar') {
-                keys.shoot = true;
-                if (currentState === STATE.PLAYING) e.preventDefault();
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = false;
-            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = false;
-            if (e.key === ' ' || e.key === 'Spacebar') keys.shoot = false;
-        });
-
-        const bindTouch = (id, key) => {
-            const el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
-        };
-        bindTouch('btn-left', 'left');
-        bindTouch('btn-right', 'right');
-        bindTouch('btn-shoot', 'shoot');
-
-        // --- Highway & Lane Engine ---
-        const NUM_LANES = 4;
-        function getLaneWidth() { return canvas.width / NUM_LANES; }
-        function getLaneX(laneIndex) {
-            const lw = getLaneWidth();
-            return laneIndex * lw + lw / 2;
+        function handleKey(e, isPressed) {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || k === 'arrowup') keys.w = isPressed;
+            if (k === 's' || k === 'arrowdown') keys.s = isPressed;
+            if (k === 'a' || k === 'arrowleft') keys.a = isPressed;
+            if (k === 'd' || k === 'arrowright') keys.d = isPressed;
+            if (k === 'q') keys.q = isPressed;
+            if (k === 'e') keys.e = isPressed;
+            if (k === ' ') keys.space = isPressed;
+            if (k === 'shift') keys.shift = isPressed;
+            if (k === 'control') keys.ctrl = isPressed;
         }
 
-        function drawHighway(dt) {
-            roadOffset = (roadOffset + (250 + level * 30) * dt) % 60;
+        // --- 3D Scene Initialization ---
+        function initScene() {
+            const container = document.getElementById('game-container');
 
-            // Dark Asphalt Base
-            ctx.fillStyle = '#181820';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x8cb3d9); // Atmospheric Sky
+            scene.fog = new THREE.FogExp2(0x8cb3d9, 0.00025);
 
-            // Side Guardrails
-            ctx.fillStyle = '#ffaa00';
-            ctx.fillRect(0, 0, 8, canvas.height);
-            ctx.fillRect(canvas.width - 8, 0, 8, canvas.height);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
 
-            // Lane Divider Dashed Lines
-            const lw = getLaneWidth();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([30, 30]);
-            ctx.lineDashOffset = -roadOffset;
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
 
-            for (let i = 1; i < NUM_LANES; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * lw, 0);
-                ctx.lineTo(i * lw, canvas.height);
-                ctx.stroke();
-            }
-            ctx.setLineDash([]); // Reset dash line
+            // Lighting
+            const ambLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambLight);
+
+            const sun = new THREE.DirectionalLight(0xfff5e6, 1.3);
+            sun.position.set(1200, 2500, 1000);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.near = 100;
+            sun.shadow.camera.far = 6000;
+            const size = 1800;
+            sun.shadow.camera.left = -size;
+            sun.shadow.camera.right = size;
+            sun.shadow.camera.top = size;
+            sun.shadow.camera.bottom = -size;
+            scene.add(sun);
+
+            createDesertWarfield();
+            create3DFighterJet();
+
+            window.addEventListener('resize', onWindowResize);
         }
 
-        // --- Particles & Visual Effects ---
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x; this.y = y;
-                this.color = color;
-                this.radius = Math.random() * 3 + 1.5;
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 9 + 2;
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed;
-                this.alpha = 1;
-                this.decay = Math.random() * 0.03 + 0.015;
+        // --- War Field Desert Ground ---
+        function createDesertWarfield() {
+            const terrainSize = 12000;
+            const geo = new THREE.PlaneGeometry(terrainSize, terrainSize, 140, 140);
+            geo.rotateX(-Math.PI / 2);
+
+            const pos = geo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const z = pos.getZ(i);
+                // Dynamic Dunes Terrain Elevation
+                const height = Math.sin(x * 0.001) * Math.cos(z * 0.001) * 180 + Math.sin(x * 0.004) * 50;
+                pos.setY(i, height - 120);
             }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                this.vx *= 0.95; this.vy *= 0.95;
-                this.alpha -= this.decay;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.alpha);
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
+            geo.computeVertexNormals();
+
+            // Tactical Sandy Military Field Material
+            const mat = new THREE.MeshStandardMaterial({
+                color: 0x8a704c,
+                roughness: 0.95,
+                metalness: 0.05,
+                flatShading: true
+            });
+
+            const terrain = new THREE.Mesh(geo, mat);
+            terrain.receiveShadow = true;
+            scene.add(terrain);
+
+            // Grid Overlay for Military Visual Look
+            const grid = new THREE.GridHelper(terrainSize, 120, 0x00e5ff, 0x4a3c28);
+            grid.position.y = -110;
+            scene.add(grid);
         }
 
-        class Shockwave {
-            constructor(x, y, color) {
-                this.x = x; this.y = y;
-                this.color = color;
-                this.radius = 5;
-                this.maxRadius = Math.random() * 30 + 35;
-                this.alpha = 1;
-            }
-            update() {
-                this.radius += (this.maxRadius - this.radius) * 0.2;
-                this.alpha -= 0.04;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.alpha);
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.restore();
-            }
+        // --- Realistic Fighter Jet ---
+        function create3DFighterJet() {
+            jetGroup = new THREE.Group();
+
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1f2833, metalness: 0.85, roughness: 0.2 });
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0x11161d, metalness: 0.9, roughness: 0.3 });
+            const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x00e5ff, metalness: 0.1, roughness: 0.1, transmission: 0.8, transparent: true, opacity: 0.7 });
+
+            // Main Stealth Nose & Fuselage
+            const noseGeo = new THREE.ConeGeometry(2, 16, 8);
+            noseGeo.rotateX(Math.PI / 2);
+            const nose = new THREE.Mesh(noseGeo, bodyMat);
+            nose.castShadow = true;
+            jetGroup.add(nose);
+
+            // Cockpit Canopy
+            const cockpitGeo = new THREE.SphereGeometry(1.2, 16, 16);
+            cockpitGeo.scale(0.85, 0.7, 3);
+            const cockpit = new THREE.Mesh(cockpitGeo, glassMat);
+            cockpit.position.set(0, 1, 0.8);
+            jetGroup.add(cockpit);
+
+            // Wings
+            const wingShape = new THREE.Shape();
+            wingShape.moveTo(0, 0);
+            wingShape.lineTo(8, -5);
+            wingShape.lineTo(8, -7.5);
+            wingShape.lineTo(0, -4);
+            wingShape.closePath();
+
+            const extrudeSettings = { depth: 0.2, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05 };
+            const wingGeo = new THREE.ExtrudeGeometry(wingShape, extrudeSettings);
+            wingGeo.rotateX(Math.PI / 2);
+
+            const rWing = new THREE.Mesh(wingGeo, wingMat);
+            rWing.position.set(0.6, 0, 1.5);
+            rWing.castShadow = true;
+            jetGroup.add(rWing);
+
+            const lWing = new THREE.Mesh(wingGeo, wingMat);
+            lWing.scale.set(-1, 1, 1);
+            lWing.position.set(-0.6, 0, 1.5);
+            lWing.castShadow = true;
+            jetGroup.add(lWing);
+
+            // Double Twin Tail Fins
+            const tailGeo = new THREE.BoxGeometry(0.2, 3.5, 3);
+            const rTail = new THREE.Mesh(tailGeo, bodyMat);
+            rTail.position.set(1.2, 1.8, -6);
+            rTail.rotation.z = -0.25;
+            jetGroup.add(rTail);
+
+            const lTail = new THREE.Mesh(tailGeo, bodyMat);
+            lTail.position.set(-1.2, 1.8, -6);
+            lTail.rotation.z = 0.25;
+            jetGroup.add(lTail);
+
+            // Thruster Exhaust Flames
+            const engineMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+            const engineGeo = new THREE.CylinderGeometry(0.7, 0.8, 1.8, 12);
+            engineGeo.rotateX(Math.PI / 2);
+
+            const lEngine = new THREE.Mesh(engineGeo, engineMat);
+            lEngine.position.set(-0.9, 0, -7.8);
+            jetGroup.add(lEngine);
+
+            const rEngine = new THREE.Mesh(engineGeo, engineMat);
+            rEngine.position.set(0.9, 0, -7.8);
+            jetGroup.add(rEngine);
+
+            jetGroup.position.set(0, 450, 0);
+            scene.add(jetGroup);
         }
 
-        class FloatingText {
-            constructor(x, y, text, color = '#00f0ff') {
-                this.x = x; this.y = y;
-                this.text = text; this.color = color;
-                this.alpha = 1; this.vy = -1.5;
-            }
-            update() {
-                this.y += this.vy;
-                this.alpha -= 0.025;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.alpha);
-                ctx.fillStyle = this.color;
-                ctx.font = 'bold 16px "Segoe UI", sans-serif';
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = this.color;
-                ctx.fillText(this.text, this.x, this.y);
-                ctx.restore();
-            }
+        // --- Ground Military Tank ---
+        function spawnEnemyTank() {
+            const tankGroup = new THREE.Group();
+
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3d4a26, roughness: 0.75, metalness: 0.3 });
+            const darkMat = new THREE.MeshStandardMaterial({ color: 0x1a2110, roughness: 0.9 });
+
+            // Base Chassis
+            const chassis = new THREE.Mesh(new THREE.BoxGeometry(8, 3.2, 12), bodyMat);
+            chassis.position.y = 1.6;
+            chassis.castShadow = true;
+            tankGroup.add(chassis);
+
+            // Tracks
+            const trackGeo = new THREE.BoxGeometry(1.8, 2.8, 12.5);
+            const lTrack = new THREE.Mesh(trackGeo, darkMat);
+            lTrack.position.set(-4.4, 1.4, 0);
+            tankGroup.add(lTrack);
+
+            const rTrack = new THREE.Mesh(trackGeo, darkMat);
+            rTrack.position.set(4.4, 1.4, 0);
+            tankGroup.add(rTrack);
+
+            // Turret
+            const turretGroup = new THREE.Group();
+            const turretMesh = new THREE.Mesh(new THREE.BoxGeometry(5.2, 2.2, 6), bodyMat);
+            turretMesh.position.y = 3.8;
+            turretMesh.castShadow = true;
+            turretGroup.add(turretMesh);
+
+            // Cannon Barrel
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 7.5, 10), darkMat);
+            barrel.rotateX(-Math.PI / 2);
+            barrel.position.set(0, 3.8, 5.5);
+            turretGroup.add(barrel);
+
+            tankGroup.add(turretGroup);
+
+            // Position random placement in war zone
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 700 + Math.random() * 2000;
+            tankGroup.position.set(
+                jetGroup.position.x + Math.cos(angle) * dist,
+                0,
+                jetGroup.position.z + Math.sin(angle) * dist
+            );
+
+            tankGroup.userData = {
+                turret: turretGroup,
+                hp: 4,
+                shootTimer: Math.random() * 2
+            };
+
+            scene.add(tankGroup);
+            tanks.push(tankGroup);
         }
 
-        let particles = [];
-        let shockwaves = [];
-        let floatTexts = [];
+        // --- Weapon Systems ---
+        function fireCannons() {
+            sfx.gunSound();
 
-        function createExplosion(x, y, color, isBig = false) {
-            const count = isBig ? 35 : 20;
+            const bulletMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bulletGeo = new THREE.CylinderGeometry(0.2, 0.2, 5, 6);
+            bulletGeo.rotateX(Math.PI / 2);
+
+            [-3.5, 3.5].forEach(offset => {
+                const bullet = new THREE.Mesh(bulletGeo, bulletMat);
+                bullet.position.copy(jetGroup.position);
+
+                const wingPos = new THREE.Vector3(offset, 0, 2).applyQuaternion(jetGroup.quaternion);
+                bullet.position.add(wingPos);
+                bullet.quaternion.copy(jetGroup.quaternion);
+
+                const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(jetGroup.quaternion);
+                bullet.userData = { vel: dir.multiplyScalar(1000), life: 2.2 };
+
+                scene.add(bullet);
+                bullets.push(bullet);
+            });
+        }
+
+        function fireTankTurret(tank) {
+            const mat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+            const geo = new THREE.SphereGeometry(1.2, 8, 8);
+
+            const proj = new THREE.Mesh(geo, mat);
+            proj.position.copy(tank.position);
+            proj.position.y += 4;
+
+            const dir = new THREE.Vector3().subVectors(jetGroup.position, proj.position).normalize();
+            proj.userData = { vel: dir.multiplyScalar(420), life: 4.5 };
+
+            scene.add(proj);
+            tankProjectiles.push(proj);
+        }
+
+        // --- Explosion Visual Particles ---
+        function createExplosion(pos, isBig = false) {
+            sfx.expSound(isBig);
+            const count = isBig ? 40 : 18;
+
             for (let i = 0; i < count; i++) {
-                particles.push(new Particle(x, y, color));
-            }
-            shockwaves.push(new Shockwave(x, y, color));
-            triggerShake(isBig ? 12 : 6);
-            sounds.playExplosion(isBig);
-        }
+                const mat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.4 ? 0xffaa00 : 0xff2200 });
+                const particle = new THREE.Mesh(new THREE.SphereGeometry(0.6 + Math.random() * 1.8, 6, 6), mat);
+                particle.position.copy(pos);
 
-        // Tire Smoke Effects
-        class TireSmoke {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.radius = Math.random() * 4 + 2;
-                this.alpha = 0.6;
-            }
-            update() {
-                this.y += 3;
-                this.radius += 0.3;
-                this.alpha -= 0.03;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.alpha);
-                ctx.fillStyle = '#888';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+                const vel = new THREE.Vector3(
+                    (Math.random() - 0.5) * 50,
+                    Math.random() * 35,
+                    (Math.random() - 0.5) * 50
+                );
+                particle.userData = { vel: vel, life: 0.7 + Math.random() * 0.4 };
+
+                scene.add(particle);
+                particles.push(particle);
             }
         }
-        let tireSmokes = [];
 
-        // --- Player Sports Car ---
-        class PlayerCar {
-            constructor() {
-                this.width = 38;
-                this.height = 70;
-                this.x = canvas.width / 2 - this.width / 2;
-                this.y = canvas.height - 110;
-                this.speed = 380;
-                this.maxHealth = 100;
-                this.health = 100;
-                this.shootCooldown = 0;
+        // --- Flight Mechanics & Movement Fix ---
+        function updateFlightControls(dt) {
+            // Speed controls
+            if (keys.shift) forwardSpeed = Math.min(forwardSpeed + 110 * dt, maxSpeed);
+            else if (keys.ctrl) forwardSpeed = Math.max(forwardSpeed - 90 * dt, minSpeed);
 
-                this.rapidFireTimer = 0;
-                this.shieldTimer = 0;
-                this.doubleScoreTimer = 0;
-                this.shieldAngle = 0;
+            // Fixed Smooth Control Rotations
+            const pitchRate = 1.4;
+            const rollRate = 2.0;
+            const yawRate = 0.9;
+
+            // Pitch (Nose Up/Down) - S (Up), W (Down)
+            if (keys.s) pitchVelocity = THREE.MathUtils.lerp(pitchVelocity, pitchRate, dt * 4);
+            else if (keys.w) pitchVelocity = THREE.MathUtils.lerp(pitchVelocity, -pitchRate, dt * 4);
+            else pitchVelocity = THREE.MathUtils.lerp(pitchVelocity, 0, dt * 4);
+
+            // Roll (Bank Angle) - A (Left), D (Right)
+            if (keys.a) rollVelocity = THREE.MathUtils.lerp(rollVelocity, rollRate, dt * 4);
+            else if (keys.d) rollVelocity = THREE.MathUtils.lerp(rollVelocity, -rollRate, dt * 4);
+            else rollVelocity = THREE.MathUtils.lerp(rollVelocity, 0, dt * 4);
+
+            // Yaw (Rudder Heading) - Q (Left), E (Right)
+            if (keys.q) yawVelocity = yawRate;
+            else if (keys.e) yawVelocity = -yawRate;
+            else yawVelocity = 0;
+
+            // Apply Rotations Proper Order
+            jetGroup.rotateX(pitchVelocity * dt);
+            jetGroup.rotateZ(rollVelocity * dt);
+            jetGroup.rotateY(yawVelocity * dt);
+
+            // Move Jet Forward
+            jetGroup.translateZ(forwardSpeed * dt);
+
+            // Height Limits
+            if (jetGroup.position.y < 18) {
+                jetGroup.position.y = 18;
+                health -= 25 * dt; // Ground crash damage
+                if (health <= 0) triggerGameOver();
             }
 
-            update(dt) {
-                if (keys.left) this.x -= this.speed * dt;
-                if (keys.right) this.x += this.speed * dt;
+            // Shoot Trigger
+            fireCooldown -= dt;
+            if (keys.space && fireCooldown <= 0) {
+                fireCannons();
+                fireCooldown = 0.09;
+            }
 
-                this.x = Math.max(10, Math.min(canvas.width - this.width - 10, this.x));
+            // Camera Tracking Chase
+            const camOffset = new THREE.Vector3(0, 9, -28).applyMatrix4(jetGroup.matrixWorld);
+            camera.position.lerp(camOffset, 0.25);
+            camera.lookAt(jetGroup.position.clone().add(new THREE.Vector3(0, 0, 60).applyQuaternion(jetGroup.quaternion)));
 
-                // Tire trail smoke
-                if (Math.random() < 0.4) {
-                    tireSmokes.push(new TireSmoke(this.x + 6, this.y + this.height - 5));
-                    tireSmokes.push(new TireSmoke(this.x + this.width - 6, this.y + this.height - 5));
+            // Update HUD Stats
+            document.getElementById('speed-txt').textContent = `${Math.round(forwardSpeed * 1.8)} KTS`;
+            document.getElementById('alt-txt').textContent = `${Math.round(jetGroup.position.y * 3.2)} FT`;
+            document.getElementById('health-bar').style.width = `${Math.max(0, (health / maxHealth) * 100)}%`;
+        }
+
+        // --- Combat & Enemy Mechanics ---
+        function updateWorld(dt) {
+            if (tanks.length < 14) spawnEnemyTank();
+
+            // Tanks behavior
+            tanks.forEach((tank) => {
+                const turret = tank.userData.turret;
+                turret.lookAt(jetGroup.position.x, turret.position.y + tank.position.y, jetGroup.position.z);
+
+                tank.userData.shootTimer -= dt;
+                const dist = tank.position.distanceTo(jetGroup.position);
+                if (dist < 1800 && tank.userData.shootTimer <= 0) {
+                    fireTankTurret(tank);
+                    tank.userData.shootTimer = 2.2 + Math.random() * 2;
                 }
+            });
 
-                if (this.shootCooldown > 0) this.shootCooldown -= dt;
-                if (this.rapidFireTimer > 0) this.rapidFireTimer -= dt;
-                if (this.shieldTimer > 0) this.shieldTimer -= dt;
-                if (this.doubleScoreTimer > 0) this.doubleScoreTimer -= dt;
+            // Player Bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                b.position.addScaledVector(b.userData.vel, dt);
+                b.userData.life -= dt;
 
-                this.shieldAngle += dt * 3;
+                let destroyed = false;
+                for (let t = tanks.length - 1; t >= 0; t--) {
+                    const tank = tanks[t];
+                    if (b.position.distanceTo(tank.position) < 7) {
+                        createExplosion(b.position, false);
+                        tank.userData.hp--;
 
-                const cooldownRate = this.rapidFireTimer > 0 ? 0.09 : 0.20;
-                if (keys.shoot && this.shootCooldown <= 0) {
-                    bullets.push(new Bullet(this.x + 8, this.y));
-                    bullets.push(new Bullet(this.x + this.width - 8, this.y));
-                    sounds.playShoot();
-                    this.shootCooldown = cooldownRate;
-                }
-
-                this.updateUI();
-            }
-
-            takeDamage(amount) {
-                if (this.shieldTimer > 0) return;
-                this.health -= amount;
-                triggerShake(8);
-                if (this.health <= 0) {
-                    this.health = 0;
-                    gameOver();
-                }
-            }
-
-            updateUI() {
-                const fill = document.getElementById('health-bar-fill');
-                const pct = (this.health / this.maxHealth) * 100;
-                fill.style.width = `${pct}%`;
-
-                const container = document.getElementById('powerup-icons');
-                container.innerHTML = '';
-                if (this.rapidFireTimer > 0) container.innerHTML += `<span class="powerup-badge">TURBO CANNON</span>`;
-                if (this.shieldTimer > 0) container.innerHTML += `<span class="powerup-badge">ENERGY SHIELD</span>`;
-                if (this.doubleScoreTimer > 0) container.innerHTML += `<span class="powerup-badge">2X MULTIPLIER</span>`;
-            }
-
-            draw() {
-                ctx.save();
-                
-                // Shield Dome
-                if (this.shieldTimer > 0) {
-                    ctx.save();
-                    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-                    ctx.rotate(this.shieldAngle);
-                    ctx.strokeStyle = '#00f0ff';
-                    ctx.lineWidth = 3;
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#00f0ff';
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 45, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
-                    ctx.fill();
-                    ctx.restore();
-                }
-
-                // Sports Car Chassis
-                ctx.fillStyle = '#00f0ff';
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = '#00f0ff';
-
-                // Main body
-                ctx.beginPath();
-                ctx.roundRect(this.x, this.y, this.width, this.height, 8);
-                ctx.fill();
-
-                // Wheels
-                ctx.fillStyle = '#111';
-                ctx.fillRect(this.x - 3, this.y + 8, 4, 14);
-                ctx.fillRect(this.x + this.width - 1, this.y + 8, 4, 14);
-                ctx.fillRect(this.x - 3, this.y + this.height - 22, 4, 14);
-                ctx.fillRect(this.x + this.width - 1, this.y + this.height - 22, 4, 14);
-
-                // Windshield / Roof
-                ctx.fillStyle = '#051525';
-                ctx.beginPath();
-                ctx.roundRect(this.x + 5, this.y + 18, this.width - 10, 28, 4);
-                ctx.fill();
-
-                // Headlights
-                ctx.fillStyle = '#ffffff';
-                ctx.shadowBlur = 10; ctx.shadowColor = '#ffffff';
-                ctx.fillRect(this.x + 4, this.y + 2, 8, 4);
-                ctx.fillRect(this.x + this.width - 12, this.y + 2, 8, 4);
-
-                // Brake Lights
-                ctx.fillStyle = '#ff0055';
-                ctx.shadowColor = '#ff0055';
-                ctx.fillRect(this.x + 4, this.y + this.height - 4, 8, 3);
-                ctx.fillRect(this.x + this.width - 12, this.y + this.height - 4, 8, 3);
-
-                ctx.restore();
-            }
-        }
-        let player;
-
-        // --- Cannon Laser Bullets ---
-        class Bullet {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.width = 4; this.height = 16;
-                this.speed = 750;
-            }
-            update(dt) { this.y -= this.speed * dt; }
-            draw() {
-                ctx.save();
-                ctx.fillStyle = '#ff0055';
-                ctx.shadowBlur = 10; ctx.shadowColor = '#ff0055';
-                ctx.fillRect(this.x - this.width / 2, this.y, this.width, this.height);
-                
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(this.x - this.width / 4, this.y + 2, this.width / 2, this.height - 4);
-                ctx.restore();
-            }
-        }
-        let bullets = [];
-
-        // --- Opposite Lane Enemy Cars ---
-        class EnemyCar {
-            constructor(laneIndex, type) {
-                this.lane = laneIndex;
-                this.type = type; // 1: Coupe, 2: SUV/Sedan, 3: Heavy Truck
-                
-                if (type === 1) { // Fast Sports Coupe
-                    this.width = 36; this.height = 65; this.speed = 220; this.maxHp = 1; this.hp = 1; this.color = '#ffaa00'; this.scoreVal = 100;
-                } else if (type === 2) { // Medium SUV
-                    this.width = 40; this.height = 75; this.speed = 150; this.maxHp = 3; this.hp = 3; this.color = '#ff0055'; this.scoreVal = 250;
-                } else { // Heavy Armored Truck
-                    this.width = 48; this.height = 95; this.speed = 90; this.maxHp = 7; this.hp = 7; this.color = '#aa00ff'; this.scoreVal = 500;
-                }
-
-                this.x = getLaneX(laneIndex) - this.width / 2;
-                this.y = -this.height - 20;
-            }
-
-            update(dt) {
-                this.y += (this.speed + level * 15) * dt;
-            }
-
-            draw() {
-                ctx.save();
-                ctx.fillStyle = this.color;
-                ctx.shadowBlur = 10; ctx.shadowColor = this.color;
-
-                // Car Chassis
-                ctx.beginPath();
-                ctx.roundRect(this.x, this.y, this.width, this.height, 6);
-                ctx.fill();
-
-                // Opposite Headlights (Facing Downwards)
-                ctx.fillStyle = '#ffffaa';
-                ctx.shadowColor = '#ffffaa';
-                ctx.fillRect(this.x + 4, this.y + this.height - 5, 8, 4);
-                ctx.fillRect(this.x + this.width - 12, this.y + this.height - 5, 8, 4);
-
-                // Windshield
-                ctx.fillStyle = '#111';
-                ctx.fillRect(this.x + 4, this.y + 15, this.width - 8, 20);
-
-                // Truck Overhead Health Bar
-                if (this.type === 3) {
-                    const hpPct = this.hp / this.maxHp;
-                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                    ctx.fillRect(this.x, this.y - 10, this.width, 5);
-                    ctx.fillStyle = '#00ffcc';
-                    ctx.fillRect(this.x, this.y - 10, this.width * hpPct, 5);
-                }
-
-                ctx.restore();
-            }
-        }
-        let enemies = [];
-
-        // --- PowerUp Items ---
-        class PowerUp {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.size = 24; this.speed = 120;
-                const types = ['RAPID', 'SHIELD', 'DOUBLE'];
-                this.type = types[Math.floor(Math.random() * types.length)];
-                this.pulse = 0;
-            }
-
-            update(dt) {
-                this.y += this.speed * dt;
-                this.pulse += dt * 5;
-            }
-
-            draw() {
-                ctx.save();
-                const scale = 1 + Math.sin(this.pulse) * 0.15;
-                ctx.translate(this.x, this.y);
-                ctx.scale(scale, scale);
-
-                let color = '#00f0ff', label = 'S';
-                if (this.type === 'RAPID') { color = '#ffcc00'; label = 'R'; }
-                if (this.type === 'DOUBLE') { color = '#00ffcc'; label = '2X'; }
-
-                ctx.fillStyle = color;
-                ctx.shadowBlur = 12; ctx.shadowColor = color;
-                ctx.beginPath();
-                ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 10px Arial';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(label, 0, 0);
-                ctx.restore();
-            }
-        }
-        let powerups = [];
-
-        // --- Spawn Manager ---
-        function spawnManager(dt) {
-            spawnTimer += dt;
-            const spawnRate = Math.max(0.4, 1.6 - (level * 0.12));
-
-            if (spawnTimer >= spawnRate) {
-                spawnTimer = 0;
-                const randomLane = Math.floor(Math.random() * NUM_LANES);
-
-                let type = 1;
-                const rand = Math.random();
-                if (level >= 2 && rand > 0.45) type = 2;
-                if (level >= 3 && rand > 0.75) type = 3;
-
-                enemies.push(new EnemyCar(randomLane, type));
-            }
-        }
-
-        // --- Collisions & Physics ---
-        function checkCollisions() {
-            // Bullets vs Enemy Cars
-            for (let bIndex = bullets.length - 1; bIndex >= 0; bIndex--) {
-                for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
-                    const b = bullets[bIndex];
-                    const e = enemies[eIndex];
-
-                    if (b && e &&
-                        b.x > e.x && b.x < e.x + e.width &&
-                        b.y > e.y && b.y < e.y + e.height) {
-                        
-                        bullets.splice(bIndex, 1);
-                        e.hp--;
-                        particles.push(new Particle(b.x, b.y, '#ffaa00'));
-
-                        if (e.hp <= 0) {
-                            const isBig = e.type === 3;
-                            createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color, isBig);
-                            
-                            const points = player.doubleScoreTimer > 0 ? e.scoreVal * 2 : e.scoreVal;
-                            score += points;
-                            document.getElementById('score-val').textContent = score;
-
-                            floatTexts.push(new FloatingText(e.x + e.width / 2, e.y, `+${points}`, e.color));
-
-                            if (Math.random() < 0.2) {
-                                powerups.push(new PowerUp(e.x + e.width / 2, e.y + e.height / 2));
-                            }
-
-                            enemies.splice(eIndex, 1);
-                            checkLevelProgression();
+                        if (tank.userData.hp <= 0) {
+                            createExplosion(tank.position, true);
+                            scene.remove(tank);
+                            tanks.splice(t, 1);
+                            score += 100;
+                            document.getElementById('score-txt').textContent = score;
                         }
+                        destroyed = true;
                         break;
                     }
                 }
+
+                if (destroyed || b.userData.life <= 0) {
+                    scene.remove(b);
+                    bullets.splice(i, 1);
+                }
             }
 
-            // Player vs Enemy Car Crash
-            for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
-                const e = enemies[eIndex];
+            // Tank Projectiles VS Jet
+            for (let i = tankProjectiles.length - 1; i >= 0; i--) {
+                const p = tankProjectiles[i];
+                p.position.addScaledVector(p.userData.vel, dt);
+                p.userData.life -= dt;
 
-                if (e.x < player.x + player.width &&
-                    e.x + e.width > player.x &&
-                    e.y < player.y + player.height &&
-                    e.y + e.height > player.y) {
-                    
-                    createExplosion(e.x + e.width / 2, e.y + e.height / 2, '#ff0055', true);
-                    player.takeDamage(25);
-                    enemies.splice(eIndex, 1);
+                if (p.position.distanceTo(jetGroup.position) < 6) {
+                    createExplosion(jetGroup.position, false);
+                    health -= 15;
+                    scene.remove(p);
+                    tankProjectiles.splice(i, 1);
+
+                    if (health <= 0) triggerGameOver();
                     continue;
                 }
 
-                // Passed By Unscathed
-                if (e.y > canvas.height) {
-                    enemies.splice(eIndex, 1);
+                if (p.userData.life <= 0) {
+                    scene.remove(p);
+                    tankProjectiles.splice(i, 1);
                 }
             }
 
-            // Powerups vs Player
-            for (let pIndex = powerups.length - 1; pIndex >= 0; pIndex--) {
-                const p = powerups[pIndex];
-                if (p.x > player.x && p.x < player.x + player.width &&
-                    p.y > player.y && p.y < player.y + player.height) {
-                    
-                    sounds.playPowerup();
-                    if (p.type === 'RAPID') player.rapidFireTimer = 8;
-                    if (p.type === 'SHIELD') player.shieldTimer = 7;
-                    if (p.type === 'DOUBLE') player.doubleScoreTimer = 10;
+            // Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.position.addScaledVector(p.userData.vel, dt);
+                p.userData.life -= dt;
+                p.scale.multiplyScalar(0.95);
 
-                    floatTexts.push(new FloatingText(player.x, player.y, `${p.type} ACTIVATED!`, '#00f0ff'));
-                    powerups.splice(pIndex, 1);
-                } else if (p.y > canvas.height) {
-                    powerups.splice(pIndex, 1);
+                if (p.userData.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(i, 1);
                 }
             }
         }
 
-        function checkLevelProgression() {
-            const nextLevel = Math.floor(score / 1500) + 1;
-            if (nextLevel > level) {
-                level = nextLevel;
-                document.getElementById('level-val').textContent = level;
-                floatTexts.push(new FloatingText(canvas.width / 2 - 40, canvas.height / 2, `LEVEL ${level}!`, '#00f0ff'));
+        // --- Core Loop ---
+        function renderLoop() {
+            requestAnimationFrame(renderLoop);
+
+            const now = performance.now();
+            const dt = Math.min((now - lastTimestamp) / 1000, 0.1);
+            lastTimestamp = now;
+
+            if (isGameRunning) {
+                updateFlightControls(dt);
+                updateWorld(dt);
             }
+
+            renderer.render(scene, camera);
         }
 
-        // --- Game Render Loop ---
-        function gameLoop(timestamp) {
-            if (!lastTime) lastTime = timestamp;
-            const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
-            lastTime = timestamp;
-
-            ctx.save();
-            if (screenShake > 0) {
-                const shakeX = (Math.random() - 0.5) * screenShake;
-                const shakeY = (Math.random() - 0.5) * screenShake;
-                ctx.translate(shakeX, shakeY);
-                screenShake *= 0.9;
-                if (screenShake < 0.3) screenShake = 0;
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Highway Road Background
-            drawHighway(dt);
-
-            if (currentState === STATE.PLAYING) {
-                player.update(dt);
-                bullets.forEach(b => b.update(dt));
-                enemies.forEach(e => e.update(dt));
-                powerups.forEach(p => p.update(dt));
-                particles.forEach(p => p.update());
-                shockwaves.forEach(sw => sw.update());
-                tireSmokes.forEach(ts => ts.update());
-                floatTexts.forEach(ft => ft.update());
-
-                bullets = bullets.filter(b => b.y > -20);
-                particles = particles.filter(p => p.alpha > 0);
-                shockwaves = shockwaves.filter(sw => sw.alpha > 0);
-                tireSmokes = tireSmokes.filter(ts => ts.alpha > 0);
-                floatTexts = floatTexts.filter(ft => ft.alpha > 0);
-
-                spawnManager(dt);
-                checkCollisions();
-
-                tireSmokes.forEach(ts => ts.draw());
-                player.draw();
-                bullets.forEach(b => b.draw());
-                enemies.forEach(e => e.draw());
-                powerups.forEach(p => p.draw());
-                particles.forEach(p => p.draw());
-                shockwaves.forEach(sw => sw.draw());
-                floatTexts.forEach(ft => ft.draw());
-            }
-
-            ctx.restore();
-            requestAnimationFrame(gameLoop);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- Flow State Controllers ---
-        function initGame() {
-            sounds.init();
+        // --- Game Flow Control (Start / Stop) ---
+        function launchGame() {
+            sfx.init();
             score = 0;
-            level = 1;
-            bullets = [];
-            enemies = [];
-            powerups = [];
-            particles = [];
-            shockwaves = [];
-            tireSmokes = [];
-            floatTexts = [];
-            player = new PlayerCar();
+            health = maxHealth;
+            document.getElementById('score-txt').textContent = '0';
 
-            document.getElementById('score-val').textContent = score;
-            document.getElementById('level-val').textContent = level;
-            
-            showScreen(null);
-            document.getElementById('pause-toggle-btn').classList.remove('hidden');
-            currentState = STATE.PLAYING;
+            jetGroup.position.set(0, 450, 0);
+            jetGroup.quaternion.set(0, 0, 0, 1);
+
+            // Clear Scene Entities
+            tanks.forEach(t => scene.remove(t));
+            bullets.forEach(b => scene.remove(b));
+            tankProjectiles.forEach(p => scene.remove(p));
+            tanks = []; bullets = []; tankProjectiles = [];
+
+            document.getElementById('start-modal').classList.add('hidden');
+            document.getElementById('over-modal').classList.add('hidden');
+
+            isGameRunning = true;
         }
 
-        function gameOver() {
-            currentState = STATE.GAMEOVER;
-            sounds.playGameOver();
-
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('he_highscore', highScore);
-                document.getElementById('highscore-val').textContent = highScore;
-            }
-
-            document.getElementById('final-score').textContent = score;
-            document.getElementById('final-level').textContent = level;
-            document.getElementById('pause-toggle-btn').classList.add('hidden');
-            showScreen('gameover-screen');
+        function triggerGameOver() {
+            isGameRunning = false; // Game Stop Logic
+            sfx.expSound(true);
+            document.getElementById('destroyed-txt').textContent = score / 100;
+            document.getElementById('over-modal').classList.remove('hidden');
         }
 
-        function showScreen(id) {
-            document.querySelectorAll('.overlay-screen').forEach(s => {
-                s.classList.remove('active');
-                s.classList.add('hidden');
-            });
-            if (id) {
-                const screen = document.getElementById(id);
-                screen.classList.remove('hidden');
-                screen.classList.add('active');
-            }
-        }
+        document.getElementById('start-btn').addEventListener('click', launchGame);
+        document.getElementById('restart-btn').addEventListener('click', launchGame);
 
-        // Listeners
-        document.getElementById('start-btn').addEventListener('click', initGame);
-        document.getElementById('restart-btn').addEventListener('click', initGame);
-        document.getElementById('pause-restart-btn').addEventListener('click', initGame);
-
-        document.getElementById('pause-toggle-btn').addEventListener('click', () => {
-            if (currentState === STATE.PLAYING) {
-                currentState = STATE.PAUSED;
-                showScreen('pause-screen');
-            }
-        });
-
-        document.getElementById('resume-btn').addEventListener('click', () => {
-            if (currentState === STATE.PAUSED) {
-                showScreen(null);
-                currentState = STATE.PLAYING;
-            }
-        });
-
-        requestAnimationFrame(gameLoop);
+        // Run Application
+        initScene();
+        renderLoop();
     </script>
 </body>
 </html>
